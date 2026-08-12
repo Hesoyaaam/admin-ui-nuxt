@@ -1,0 +1,218 @@
+openapi: 3.0.3
+info:
+  title: API Modul Tunjangan Transport - JMC Admin UI
+  version: 1.0.0
+  description: Dokumentasi API untuk manajemen dan perhitungan tunjangan transport pegawai.
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development Server
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth_token
+      description: Autentikasi menggunakan JWT Token yang disimpan dalam HTTP-only Cookie.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Autentikasi menggunakan Bearer Token pada Header Authorization.
+
+paths:
+  /transport/index.post.js:
+    post:
+      summary: Menambahkan Pengaturan Tarif Transport
+      description: Menyimpan pengaturan baru mengenai tarif per km, minimal/maksimal km, serta masa berlaku tarif.
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tarif_per_km
+                - min_km
+                - max_km
+                - berlaku_mulai
+              properties:
+                tarif_per_km:
+                  type: number
+                  example: 1500
+                min_km:
+                  type: number
+                  example: 5
+                max_km:
+                  type: number
+                  example: 25
+                berlaku_mulai:
+                  type: string
+                  format: date
+                  example: "2026-01-01"
+      responses:
+        "200":
+          description: Berhasil menyimpan pengaturan tunjangan transport.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Pengaturan tunjangan transport berhasil disimpan
+        "400":
+          description: Validasi input gagal.
+        "500":
+          description: Kesalahan pada sisi server / Database error.
+
+  /transport/hitung.post.js:
+    post:
+      summary: Menghitung Tunjangan Transport Pegawai
+      description: Melakukan proses kalkulasi otomatis tunjangan transport untuk seluruh pegawai aktif berdasarkan bulan dan tahun yang ditentukan.
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - bulan
+                - tahun
+              properties:
+                bulan:
+                  type: integer
+                  example: 8
+                tahun:
+                  type: integer
+                  example: 2026
+      responses:
+        "200":
+          description: Perhitungan tunjangan berhasil dijalankan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Perhitungan selesai!
+        "400":
+          description: Setting tarif transport belum diatur.
+        "500":
+          description: Terjadi kesalahan pada proses perhitungan / transaksi database.
+
+  /transport/detail.get.js:
+    get:
+      summary: Mengambil Detail Tunjangan Transport
+      description: Menampilkan rincian data tunjangan transport per pegawai berdasarkan bulan dan tahun tertentu.
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: bulan
+          in: query
+          required: true
+          schema:
+            type: integer
+          example: 8
+        - name: tahun
+          in: query
+          required: true
+          schema:
+            type: integer
+          example: 2026
+      responses:
+        "200":
+          description: Berhasil mengambil data detail tunjangan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        id_pegawai:
+                          type: integer
+                          example: 5
+                        nama_pegawai:
+                          type: string
+                          example: Budi Santoso
+                        total_km:
+                          type: number
+                          example: 12
+                        jumlah_hari:
+                          type: integer
+                          example: 20
+                        nominal_tunjangan:
+                          type: number
+                          example: 360000
+        "500":
+          description: Kesalahan pada server.
+
+  /transport/rekap.get.js:
+    get:
+      summary: Mengambil Rekapitulasi Tunjangan Transport Tahunan
+      description: Menampilkan ringkasan total penerima dan total nominal tunjangan transport yang dikelompokkan berdasarkan bulan dalam tahun tertentu.
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: tahun
+          in: query
+          required: false
+          schema:
+            type: integer
+          example: 2026
+      responses:
+        "200":
+          description: Berhasil mengambil data rekapitulasi.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  tahun:
+                    type: integer
+                    example: 2026
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        bulan:
+                          type: integer
+                          example: 8
+                        total_penerima:
+                          type: integer
+                          example: 15
+                        total_tunjangan:
+                          type: number
+                          example: 5400000
+        "500":
+          description: Kesalahan pada server.
