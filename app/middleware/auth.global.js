@@ -2,11 +2,18 @@ export default defineNuxtRouteMiddleware((to, from) => {
   const publicPages = ["/login"];
   const authCookie = useCookie("auth_token");
 
-  if (!publicPages.includes(to.path) && !authCookie.value) {
+  let hasClientToken = false;
+  if (process.client) {
+    hasClientToken = !!localStorage.getItem("token");
+  }
+
+  const isAuthenticated = authCookie.value || hasClientToken;
+
+  if (!publicPages.includes(to.path) && !isAuthenticated) {
     return navigateTo("/login");
   }
 
-  if (to.path === "/login" && authCookie.value) {
+  if (to.path === "/login" && isAuthenticated) {
     return navigateTo("/");
   }
 });

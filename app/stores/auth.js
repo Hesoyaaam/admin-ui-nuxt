@@ -12,6 +12,9 @@ export const useAuthStore = defineStore("auth", () => {
         user.value = res.user;
       }
     } catch (err) {
+      if (process.client) {
+        alert("Sesi Anda telah habis (3 menit). Silakan login kembali.");
+      }
       logout();
     }
   };
@@ -23,7 +26,15 @@ export const useAuthStore = defineStore("auth", () => {
 
     user.value = null;
     token.value = null;
-    navigateTo("/login");
+
+    if (process.client) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("is_logged_in");
+      localStorage.removeItem("remember_me");
+      localStorage.removeItem("login_time");
+
+      window.location.href = "/login";
+    }
   };
 
   return { user, token, fetchUser, logout };

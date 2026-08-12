@@ -166,7 +166,11 @@ const handleLogin = async () => {
       if (response.token) {
         localStorage.setItem("token", response.token);
       }
-      await navigateTo("/");
+      localStorage.setItem("is_logged_in", "true");
+      localStorage.setItem("remember_me", form.remember_me.toString());
+      localStorage.setItem("login_time", Date.now().toString());
+
+      window.location.href = "/";
     }
   } catch (error) {
     errorMsg.value =
